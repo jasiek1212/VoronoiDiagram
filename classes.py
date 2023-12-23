@@ -1,4 +1,5 @@
-from math import sqrt
+from math import sqrt, inf, log10
+from typing import List
 import random
 
 class Triangle:
@@ -11,12 +12,24 @@ class Triangle:
         self.edges = [[self.a, self.b],
                       [self.b, self.c],
                       [self.c, self.a]]
-        
-        self.neighbours = [None] * 3
+    
+    # overwrites == comparator, equivalent of Java's equals() override
+    def __eq__(self,other ) -> bool:
+        if(isinstance(other,Triangle)):
+            #points might be in different order
+            temp = {}
+            temp.update(self.a)
+            temp.update(self.b)
+            temp.update(self.c)
+            temp.update(other.a)
+            temp.update(other.b)
+            temp.update(other.c)
+            if len(temp) == 3:
+                return True
+            return False
+        print("Comparing wrong objects - triangle")
+        return False
 
-        self.edges_to_neighbours = {[self.a, self.b] : self.neighbours[0],
-                                    [self.b, self.c] : self.neighbours[1],
-                                    [self.c, self.a] : self.neighbours[2]}
 
 
 class Point:
@@ -42,6 +55,27 @@ class Point:
         has_pos = (d1 > 0) or (d2 > 0) or (d3 > 0)
 
         return not (has_neg and has_pos)
+    
+    def __eq__(self,point):
+        if isinstance(point,Point):
+            if self.x == point.x and self.y == point.y: return True
+            return False
+        print("Comparing wrong objects - point")
+        return False
+    
+class Neighbours:
+    def __init__(self) -> None:
+        self.edges = {}
+
+    def put(self,edge,T1 : Triangle, T2 : Triangle):
+        self.edges.update({edge : (T1,T2)})
+    
+    def remove_neighbours(self, edge : tuple(Point,Point)):
+        self.edges.pop(edge)
+
+    def findNeighbour(self, edge : tuple(Point,Point), T1: Triangle) -> Triangle:
+        if self.edges.get(edge)[0] == T1: return self.edges.get(edge)[1]
+        else: return self.edges.get[edge][0]
 
 
 def mat_det_3x3(a: Point, b: Point, c: Point, d: Point) -> float:
@@ -72,40 +106,55 @@ def get_edge_centre(edge: tuple[Point, Point]) -> Point:
     return Point(x, y)
 
 
-def dist(p1: Point, p2: Point) -> float:
-    return sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
+def distSq(p1: Point, p2: Point) -> float: #nie ma sensu liczyć pierwiastka, szkoda czasu
+    return (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2
 
 
-def get_next_triangle(curr_triangle: Triangle, p: Point) -> Triangle:
+def get_next_triangle(neighbours : Neighbours, curr_triangle: Triangle, p: Point) -> Triangle:
     best_dist = float("inf")
     best_edge = None
 
     for edge in curr_triangle.edges:
         centre = get_edge_centre(edge)
-        if best_dist > dist(centre, p):
+        if best_dist > distSq(centre, p):
             best_edge = edge
     
-    return curr_triangle.edges_to_neighbours[best_edge]
+    return neighbours.findNeighbour(best_edge, curr_triangle)
+
+def gen_init_triangles(points: List[Point]) -> tuple(Triangle,Triangle,tuple(Point,Point)):
+    min_x,min_y = inf,inf
+    max_x, max_y = -inf,-inf 
+    for i in range(len(points)):
+        curr = points[i]
+        max_x = max(curr.x,max_x)
+        min_x = min(curr.x,min_x)
+        max_y = max(curr.y,max_y)
+        min_y = min(curr.y,min_y)
+    magnitude = max(log10(abs(max_y)),log10(abs(max_x)),log10(abs(min_x)),log10(abs(min_y)))
+    br,bl = Point(min_x-magnitude,min_y-magnitude), Point(max_x+magnitude,min_y-magnitude)
+    tr,tl = Point(max_x+magnitude,max_y+magnitude), Point(min_x-magnitude,max_y+magnitude)
+    t1 = Triangle(bl,br,tr)
+    t2 = Triangle(bl,tr,tl)
+    diagonal = (bl,tr)
+    return t1,t2,diagonal
 
 
 class Delaunay_Triangulation:
     # class responsible for algorithm
 
-    def __init__(self) -> None:
+    def __init__(self, points : List[Point]) -> None:
         # list of Triangles
-        self.triangulation = []
+        t1, t2, diagonal = gen_init_triangles(points)
+        self.triangulation = [t1,t2]
+        # dictionary edge : T1, T2 where T1 neighbours T2 with edge
+        self.neighbours = Neighbours()
+        self.neighbours.put(diagonal,t1,t2)
 
-        # TODO implement initial biggest triangle containing all of the points
-    
     def add_point(self, p: Point) -> Triangle:
         # returns triangle which contains p after adding p to triangulation
-
-        if len(self.triangulation) == 1:
-            return self.triangulation[0]
-        
         curr_triangle = random.choice(self.triangulation)
 
-        while(not p.is_in_triangle(curr_triangle)):
+        while not p.is_in_triangle(curr_triangle):
             curr_triangle = get_next_triangle(curr_triangle)
         
         return curr_triangle
