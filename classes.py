@@ -1,6 +1,7 @@
 from math import sqrt, inf, log10
 from typing import List
 import random
+from functools import cmp_to_key
 
 class Triangle:
     def __init__(self, a, b, c) -> None:
@@ -67,15 +68,19 @@ class Neighbours:
     def __init__(self) -> None:
         self.edges = {}
 
-    def put(self,edge,T1 : Triangle, T2 : Triangle):
-        self.edges.update({edge : (T1,T2)})
+    def put(self,edge,T1 : Triangle, T2 : Triangle = None):
+        self.edges.update({edge : [T1,T2]})
     
     def remove_neighbours(self, edge : tuple(Point,Point)):
         self.edges.pop(edge)
 
-    def findNeighbour(self, edge : tuple(Point,Point), T1: Triangle) -> Triangle:
+    def find_neighbour(self, edge : tuple(Point,Point), T1: Triangle) -> Triangle:
+        if len(self.edges) == 1: return None
         if self.edges.get(edge)[0] == T1: return self.edges.get(edge)[1]
         else: return self.edges.get[edge][0]
+    
+    def remove_neighbour(self, edge : tuple(Point,Point), triangle : Triangle):
+        self.edges.get(edge).remove(triangle)
 
 
 def mat_det_3x3(a: Point, b: Point, c: Point, d: Point) -> float:
@@ -106,6 +111,22 @@ def get_edge_centre(edge: tuple[Point, Point]) -> Point:
     return Point(x, y)
 
 
+def orientation(p, q, r): 
+    det = (p.x - q.x)*(r.y - q.y) - (r.x - q.x)*(p.y - q.y)
+  
+    if det == 0: 
+        return 0
+    elif det > 0: 
+        return 1
+    else: 
+        return 2
+
+def find_next_triangle(neighbours : Neighbours, curr_triangle : Triangle, p : Point) -> Triangle:
+    if orientation(curr_triangle.a,curr_triangle.b,p) == 2: return neighbours.find_neighbour((curr_triangle.a,curr_triangle.b))
+    elif orientation(curr_triangle.b,curr_triangle.c,p) == 2: return neighbours.find_neighbour((curr_triangle.b,curr_triangle.c))
+    return neighbours.find_neighbour((curr_triangle.c,curr_triangle.a))
+
+
 def distSq(p1: Point, p2: Point) -> float: #nie ma sensu liczyć pierwiastka, szkoda czasu
     return (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2
 
@@ -119,7 +140,7 @@ def get_next_triangle(neighbours : Neighbours, curr_triangle: Triangle, p: Point
         if best_dist > distSq(centre, p):
             best_edge = edge
     
-    return neighbours.findNeighbour(best_edge, curr_triangle)
+    return neighbours.find_neighbour(best_edge, curr_triangle)
 
 def gen_init_triangles(points: List[Point]) -> tuple(Triangle,Triangle,tuple(Point,Point)):
     min_x,min_y = inf,inf
@@ -145,12 +166,11 @@ class Delaunay_Triangulation:
     def __init__(self, points : List[Point]) -> None:
         # list of Triangles
         t1, t2, diagonal = gen_init_triangles(points)
-        self.triangulation = [t1,t2]
-        # dictionary edge : T1, T2 where T1 neighbours T2 with edge
+        self.triangulation = {t1,t2}
         self.neighbours = Neighbours()
         self.neighbours.put(diagonal,t1,t2)
 
-    def add_point(self, p: Point) -> Triangle:
+    def find_triangle(self, p: Point) -> Triangle:
         # returns triangle which contains p after adding p to triangulation
         curr_triangle = random.choice(self.triangulation)
 
@@ -158,6 +178,41 @@ class Delaunay_Triangulation:
             curr_triangle = get_next_triangle(curr_triangle)
         
         return curr_triangle
+    
+    def find_neighbourhood(self, p : Point, curr : Triangle, visited : dict, edge = None, neighbourhood : List = [], hull : List(tuple(Point,Point)) = []):
+        visited.update({curr,True})
+        if p.is_in_circumcircle_of(curr):
+            neighbourhood.append(curr)
+        else: 
+            hull.extend(edge)
+            return neighbourhood, hull
+        for i in range(3):
+            neighbour = self.neighbours.find_neighbour(curr.edges[i])
+            if neighbour is not None and not visited.get(neighbour):
+                neighbourhood, hull = self.find_neighbourhood(p, neighbour, visited, curr.edges[i], neighbourhood )
+        return neighbourhood, hull
+
+    def delete_neighbourhood(self, neighbourhood) -> None:
+        points = []
+        for triangle in neighbourhood:
+            points.extend((triangle.a,triangle.b,triangle.c))
+            for i in range(3):
+                self.neighbours.remove_neighbour(triangle.edges[i], triangle)
+            self.triangulation.remove(triangle)
+        
+ 
+    def rebuild_neighbourhood(self, p : Point, hull):
+        for edge in hull:
+            t = Triangle(p,edge[0],edge[1])
+            self.triangulation.add(t)
+            self.neighbours.put(edge,t) # TODO .put needs a change in implementation
+            edge1 = (p,edge[0])
+            self.neighbours.put(edge1,t)
+            edge2 = (edge[1],p)
+            self.neighbours.put(edge2,t)
+
+
+
 
 
 
