@@ -1,5 +1,5 @@
 from math import sqrt, inf, log10
-from typing import List
+from typing import List, Tuple
 import random
 from functools import cmp_to_key
 
@@ -15,21 +15,24 @@ class Triangle:
                       [self.c, self.a]]
     
     # overwrites == comparator, equivalent of Java's equals() override
-    def __eq__(self,other ) -> bool:
+    def __eq__(self,other):
         if(isinstance(other,Triangle)):
             #points might be in different order
             temp = {}
-            temp.update(self.a)
-            temp.update(self.b)
-            temp.update(self.c)
-            temp.update(other.a)
-            temp.update(other.b)
-            temp.update(other.c)
+            temp.update({self.a})
+            temp.update({self.b})
+            temp.update({self.c})
+            temp.update({other.a})
+            temp.update({other.b})
+            temp.update({other.c})
             if len(temp) == 3:
                 return True
             return False
         print("Comparing wrong objects - triangle")
         return False
+    
+    def __hash__(self):
+        return hash((self.a, self.b, self.c))
 
 
 
@@ -64,6 +67,9 @@ class Point:
         print("Comparing wrong objects - point")
         return False
     
+    def __hash__(self):
+        return hash((self.x,self.y))
+    
 class Neighbours:
     def __init__(self) -> None:
         self.edges = {}
@@ -71,15 +77,15 @@ class Neighbours:
     def put(self,edge,T1 : Triangle, T2 : Triangle = None):
         self.edges.update({edge : [T1,T2]})
     
-    def remove_neighbours(self, edge : tuple(Point,Point)):
+    def remove_neighbours(self, edge : Tuple[Point,Point]):
         self.edges.pop(edge)
 
-    def find_neighbour(self, edge : tuple(Point,Point), T1: Triangle) -> Triangle:
+    def find_neighbour(self, edge : Tuple[Point,Point], T1: Triangle) -> Triangle:
         if len(self.edges) == 1: return None
         if self.edges.get(edge)[0] == T1: return self.edges.get(edge)[1]
         else: return self.edges.get[edge][0]
     
-    def remove_neighbour(self, edge : tuple(Point,Point), triangle : Triangle):
+    def remove_neighbour(self, edge : Tuple[Point,Point], triangle : Triangle):
         self.edges.get(edge).remove(triangle)
 
 
@@ -101,7 +107,7 @@ def sign(p1: Point, p2: Point, p3: Point) -> float:
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)
 
 
-def get_edge_centre(edge: tuple[Point, Point]) -> Point:
+def get_edge_centre(edge: Tuple[Point,Point]) -> Point:
     p1 = edge[0]
     p2 = edge[1]
 
@@ -142,7 +148,7 @@ def get_next_triangle(neighbours : Neighbours, curr_triangle: Triangle, p: Point
     
     return neighbours.find_neighbour(best_edge, curr_triangle)
 
-def gen_init_triangles(points: List[Point]) -> tuple(Triangle,Triangle,tuple(Point,Point)):
+def gen_init_triangles(points: List[Point]) -> Tuple[Triangle,Triangle,Tuple[Point,Point]]:
     min_x,min_y = inf,inf
     max_x, max_y = -inf,-inf 
     for i in range(len(points)):
@@ -179,7 +185,7 @@ class Delaunay_Triangulation:
         
         return curr_triangle
     
-    def find_neighbourhood(self, p : Point, curr : Triangle, visited : dict, edge = None, neighbourhood : List = [], hull : List(tuple(Point,Point)) = []):
+    def find_neighbourhood(self, p : Point, curr : Triangle, visited : dict, edge = None, neighbourhood : List[Triangle] = [], hull : List[Tuple[Point,Point]] = []):
         visited.update({curr,True})
         if p.is_in_circumcircle_of(curr):
             neighbourhood.append(curr)
