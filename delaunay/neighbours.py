@@ -1,12 +1,11 @@
-from edge import Edge
-from triangle import Triangle
-from util import *
+from .triangle import Triangle
+from .edge import Edge
 
 class Neighbours:
     def __init__(self):
         self.edges = {}
     
-    def put(self,triangle : Triangle):
+    def put(self, triangle : Triangle):
         for edge in triangle.edges:
             if self.edges.get(edge) is not None:
                 self.edges.get(edge).append(triangle)
