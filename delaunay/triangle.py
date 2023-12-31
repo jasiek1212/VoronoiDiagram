@@ -1,5 +1,8 @@
-from .edge import Edge
+from .edge import Edge, find_intersection, linePoints
 from .point import Point, orientation
+from visualizer.figures.polygon import Polygon
+
+from test_vis import my_vis
 
 class Triangle:
     def __init__(self, a, b, c) -> None:
@@ -16,6 +19,9 @@ class Triangle:
         self.edges = [Edge(self.a, self.b),
                       Edge(self.b, self.c),
                       Edge(self.c, self.a)]
+        
+        if not orientation(self.a, self.b, self.c) == 2:
+            raise Exception("NOT GOOD")
     
 
     def circumcircle_contains(self, point: Point) -> bool:
@@ -55,8 +61,7 @@ class Triangle:
             if len(temp) == 3:
                 return True
             return False
-        print("Comparing wrong objects - triangle")
-        return False
+        raise Exception("Comparing wrong objects - triangle")
     
     def __hash__(self):
         return hash((self.a, self.b, self.c))
@@ -65,7 +70,24 @@ class Triangle:
         for p in list:
             if self.a == p or self.b == p or self.c == p: return True
         return False
+    
+    def find_circumcenter(self) -> Point:
+        first_bisector = self.edges[0].get_perpendicular_bisector()
+        second_bisector = self.edges[1].get_perpendicular_bisector()
 
+        # my_vis.add_line(linePoints(*first_bisector), color="orange")
+        # my_vis.add_line(linePoints(*second_bisector), color="orange")
+
+        return find_intersection(*first_bisector, *second_bisector)
+
+    def to_point_list(self) -> list[Point]:
+        return [(self.a.x, self.a.y), (self.b.x, self.b.y), (self.c.x, self.c.y)]
+
+    def to_polygon(self) -> Polygon:
+        return Polygon(
+            data=self.to_point_list(),
+            options={},
+        )
 
 def sign(p1: Point, p2: Point, p3: Point) -> float:
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)
