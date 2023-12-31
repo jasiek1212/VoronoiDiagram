@@ -55,7 +55,7 @@ class DelaunayTriangulation:
  
     def rebuild_neighbourhood(self, p : Point, hull):
         for edge in hull:
-            t = Triangle(p,edge.p1,edge.p2)
+            t = Triangle(edge.p1,edge.p2,p)
             self.add(t)
         self.inittriangle = t
 
