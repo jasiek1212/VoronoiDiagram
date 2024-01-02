@@ -20,8 +20,9 @@ class Point:
         return hash((self.x, self.y))
 
 
-def orientation(p: Point, q: Point, r: Point): 
-    det = (p.x - q.x) * (r.y - q.y) - (r.x - q.x) * (p.y - q.y)
+def orientation(p1: Point, p2: Point, p3: Point): 
+    det = (p2.y - p1.y)*(p3.x-p2.x) - (p2.x-p1.x)*(p3.y-p2.y)
+    # det = (p.x - q.x) * (r.y - q.y) - (r.x - q.x) * (p.y - q.y)
   
     if det == 0: 
         return 0
