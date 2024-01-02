@@ -1,13 +1,17 @@
 import random
 import math
+import numpy as np
 
 from .DataType import Point, Event, Arc, Segment, PriorityQueue
+from visualizer.main import Visualizer
+
 
 # Source: (C++) http://www.cs.hmc.edu/~mbrubeck/voronoi.html
 
 class Voronoi:
     def __init__(self, points):
         self.output = [] # list of line segment
+        self.init_points = points
         self.arc = None  # binary tree for parabola arcs
 
         self.points = PriorityQueue() # site events
@@ -97,7 +101,7 @@ class Voronoi:
                         i.pnext.pprev = Arc(i.p, i, i.pnext)
                         i.pnext = i.pnext.pprev
                     else:
-                        i.pnext = Arc(i.p, i)
+                        i.pnext = Arc(i.p,i)
                     i.pnext.s1 = i.s1
 
                     # add p between i and i.pnext
@@ -250,6 +254,16 @@ class Voronoi:
             if  bound(2,segment) is not None:
                 correct_out.append(bound(2,segment))
         return correct_out
+    
+    def visualize(self):
+        self.process()
+        segments = self.get_output()
+        vis = Visualizer()
+        vis.add_line_segment(segments, color="purple")
+        vis.add_line_segment([((0,0),(100,0)),((100,0),(100,100)),((100,100),(0,100)),((0,100),(0,0))])
+        for point in self.init_points:
+            vis.add_point((point.x,point.y),color=np.random.rand(3,))
+        vis.show()
 
 def bound(n,seg):
     if seg[0][0] < 0 and seg[1][0] < 0: return None
