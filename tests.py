@@ -19,17 +19,17 @@ def main_test(points):
     tri.clean_up()  
     return tri, points
 
-def tests(num_of_points, interations_num):
+def tests(num_of_points, iterations_num):
     failed = 0
     start = timer()
-    for i in range(interations_num):
+    for i in range(iterations_num):
         points = gen_points(num_of_points)
         try:
             a, b = main_test(points)
         except: 
             failed += 1
     end = timer()
-    print("Passed: ", interations_num-failed, " out of ", interations_num, " z czasem ", end-start, "s.")
+    print("Passed: ", iterations_num-failed, " out of ", iterations_num, " with time ", end-start, "s.")
     return failed
 
-tests(num_of_points=10,interations_num=10000) #wybierz liczbę punktów oraz ilość testów
+tests(num_of_points=7,iterations_num=1000) #wybierz liczbę punktów oraz ilość testów
