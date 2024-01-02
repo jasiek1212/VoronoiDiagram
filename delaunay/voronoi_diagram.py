@@ -19,6 +19,21 @@ class VoronoiDiagram:
         
         return point_to_edges
     
+
+    def create_boundary_for_points(self) -> tuple[int, int, int, int]:
+        x_coords = [point.get()[0] for point in self.points]
+        y_coords = [point.get()[1] for point in self.points]
+
+        min_x = min(x_coords)
+        max_x = max(x_coords)
+        min_y = min(y_coords)
+        max_y = max(y_coords)
+
+        frame = 10
+
+
+        return min_x, max_x, min_y, max_y
+    
     def create_polygon_for_vertex(self, vertex: Point, point_to_edges: dict) -> Optional[list[Point]]:
         polygon = []
         edges = list(point_to_edges[vertex])
