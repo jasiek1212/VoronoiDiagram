@@ -59,10 +59,8 @@ class PriorityQueue:
         self.counter = itertools.count()
 
     def push(self, item):
-        # check for duplicate
         if item in self.entry_finder: return
         count = next(self.counter)
-        # use x-coordinate as a primary key (heapq in python is min-heap)
         entry = [item.x, count, item]
         self.entry_finder[item] = entry
         heapq.heappush(self.pq, entry)
