@@ -24,14 +24,16 @@ class DelaunayTriangulation:
         self.neighbours.put(self.super_triangle)
         self.inittriangle = self.super_triangle
     
-    def run(self) -> list[Triangle]:
+    def run(self, clean_up=True) -> list[Triangle]:
         for i, point in enumerate(self.points):
-            print("Adding point: ", i)
+            # print("Adding point: ", i)
             triangle = self.find_triangle(point)
             neighbourhood, hull = self.find_neighbourhood(point, triangle)
             self.delete_neighbourhood(neighbourhood)
             self.rebuild_neighbourhood(point, hull)
-        # self.clean_up()
+        
+        if clean_up:
+            self.clean_up()
         return self.triangulation
     
     def run_with_visualisation(self) -> tuple[list[Triangle], Visualizer]:
@@ -150,7 +152,7 @@ class DelaunayTriangulation:
 
         i = 0
         while not curr_triangle.point_in_triangle(p):
-            print("Next triangle search, step: ", i)
+            # print("Next triangle search, step: ", i)
             curr_triangle = _next_triangle(curr_triangle, p)
             polygons_to_vis.append(curr_triangle.to_polygon().data)
             visited.add(curr_triangle)
