@@ -6,10 +6,11 @@ from .structures import Point, Event, Arc, Segment, PriorityQueue
 from visualizer.main import Visualizer
 
 class FortuneAlgorithm:
-    def __init__(self, points):
+    def __init__(self, points, bound):
         self.output = [] # list of line segment
         self.init_points = points
         self.arc = None  # binary tree for parabola arcs
+        self.bound = bound
 
         self.points = PriorityQueue() # site events
         self.event = PriorityQueue() # circle events
@@ -248,8 +249,8 @@ class FortuneAlgorithm:
             p1 = o.end
             res.append(((p0.x, p0.y), (p1.x, p1.y)))
         for segment in res:
-            if  bound(2,segment) is not None:
-                correct_out.append(bound(2,segment))
+            if  bound(self.bound,segment) is not None:
+                correct_out.append(bound(self.bound,segment))
         return correct_out
     
     def visualize(self):
@@ -257,7 +258,8 @@ class FortuneAlgorithm:
         segments = self.get_output()
         vis = Visualizer()
         vis.add_line_segment(segments, color="purple")
-        vis.add_line_segment([((0,0),(100,0)),((100,0),(100,100)),((100,100),(0,100)),((0,100),(0,0))])
+        vis.add_line_segment([((0,0),(10**self.bound,0)),((10**self.bound,0),(10**self.bound,10**self.bound)),
+                              ((10**self.bound,10**self.bound),(0,10**self.bound)),((0,10**self.bound),(0,0))])
         for point in self.init_points:
             vis.add_point((point.x,point.y),color=np.random.rand(3,))
         vis.show()
